@@ -1,4 +1,4 @@
-package com.diter.motiondetection.motiondetection;
+package com.diter.motiondetection;
 
 public class State {
 

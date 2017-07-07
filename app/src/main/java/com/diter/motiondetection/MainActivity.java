@@ -1,26 +1,23 @@
 package com.diter.motiondetection;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.hardware.Camera;
+import android.content.Intent;
 import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.diter.motiondetection.motiondetection.MotionDetector;
-import com.diter.motiondetection.motiondetection.MotionDetectorCallback;
 
 public class MainActivity extends AppCompatActivity {
     private TextView txtStatus;
     private MotionDetector motionDetector;
 
 public void onClickStart(View v) {
+    //byte[] img = new byte[] {};
+
     Toast.makeText(getBaseContext(), "onClickStart", Toast.LENGTH_SHORT).show();
     Log.d("MyTag", "onClickStart");
     try {
@@ -29,7 +26,7 @@ public void onClickStart(View v) {
             motionDetector = new MotionDetector(this, (SurfaceView) findViewById(R.id.surfaceView));
             motionDetector.setMotionDetectorCallback(new MotionDetectorCallback() {
                 @Override
-                public void onMotionDetected() {
+                public void onMotionDetected(byte[] img ) {
                     Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                     v.vibrate(80);
                     //txtStatus.setText("Motion detected");
@@ -63,11 +60,15 @@ public void onClickStart(View v) {
         motionDetector = new MotionDetector(this, (SurfaceView) findViewById(R.id.surfaceView));
         motionDetector.setMotionDetectorCallback(new MotionDetectorCallback() {
             @Override
-            public void onMotionDetected() {
+            public void onMotionDetected(byte[] img ) {
                 Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 v.vibrate(80);
                 txtStatus.setText("Motion detected");
                 Log.d("MyTag","Motion detected");
+                //new SavePhotoTask().execute(img);
+                motionDetector.savePhoto(img);
+                //startService(new Intent(getApplicationContext(), PhotoTakingService.class));
+                Log.d("MyTag","After PhotoTakingService");
             }
 
             @Override
@@ -87,6 +88,16 @@ public void onClickStart(View v) {
 
         super.onResume();
         //onClickResume(txtStatus);
+/*
+        mSurfaceViewContainer.removeAllViews();
+        mSurfaceView = new SurfaceView(mSurfaceViewContainer.getContext());
+        mSurfaceViewContainer.addView(mSurfaceView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        SurfaceHolder previewHolder = mSurfaceView.getHolder();
+        previewHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        previewHolder.addCallback(mSurfaceHolderCallback);
+        */
+
         motionDetector.onResume();
 
         if (motionDetector.checkCameraHardware()) {
@@ -114,6 +125,7 @@ public void onClickStart(View v) {
     protected void onPause() {
         super.onPause();
         //motionDetector.onPause();
+        Log.d("MyTag", "MainActivity onPause");
     }
 
     public void onClickPause(View v) {

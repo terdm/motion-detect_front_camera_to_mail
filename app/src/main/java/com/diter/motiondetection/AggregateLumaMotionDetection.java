@@ -1,8 +1,6 @@
-package com.diter.motiondetection.motiondetection;
+package com.diter.motiondetection;
 
 //import android.util.Log;
-
-import android.util.Log;
 
 public class AggregateLumaMotionDetection implements IMotionDetection {
 
