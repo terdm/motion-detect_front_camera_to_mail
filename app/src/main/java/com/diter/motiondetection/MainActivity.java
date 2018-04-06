@@ -1,5 +1,6 @@
 package com.diter.motiondetection;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Vibrator;
@@ -11,9 +12,18 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
+
 public class MainActivity extends AppCompatActivity {
     private TextView txtStatus;
     private MotionDetector motionDetector;
+    BroadcastReceiver br;
+
+    public final static String PARAM_TIME = "time";
+    public final static String PARAM_TASK = "task";
+    public final static String PARAM_RESULT = "result";
+    public final static String PARAM_STATUS = "status";
+    final String LOG_TAG = "MyTag";
 
 public void onClickStart(View v) {
     //byte[] img = new byte[] {};
@@ -29,6 +39,7 @@ public void onClickStart(View v) {
                 public void onMotionDetected(byte[] img ) {
                     Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                     v.vibrate(80);
+                    //v.vibrate(10);
                     //txtStatus.setText("Motion detected");
                     Log.d("MyTag","Motion Detected");
                 }
@@ -55,6 +66,10 @@ public void onClickStart(View v) {
         txtStatus = (TextView) findViewById(R.id.txtStatus);
 
 
+        PowerConnectionReceiver Battary = new PowerConnectionReceiver();
+
+        Log.d("MyTag", "MainActivity onCreate level " + Battary.level + " scale " + Battary.scale + " usbCharge " + Battary.usbCharge + " acCharge "+ Battary.acCharge );
+
         //onClickStart(txtStatus);
 
         motionDetector = new MotionDetector(this, (SurfaceView) findViewById(R.id.surfaceView));
@@ -63,6 +78,7 @@ public void onClickStart(View v) {
             public void onMotionDetected(byte[] img ) {
                 Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 v.vibrate(80);
+                //v.vibrate(10);
                 txtStatus.setText("Motion detected");
                 Log.d("MyTag","Motion detected");
                 //new SavePhotoTask().execute(img);
@@ -81,7 +97,26 @@ public void onClickStart(View v) {
         //motionDetector.setCheckInterval(500);
         //motionDetector.setLeniency(20);
         //motionDetector.setMinLuma(1000);
+
+        // создаем BroadcastReceiver
+        br = new BroadcastReceiver() {
+            // действия при получении сообщений
+            public void onReceive(Context context, Intent intent) {
+                int task = intent.getIntExtra(PARAM_TASK, 0);
+                int status = intent.getIntExtra(PARAM_STATUS, 0);
+                Log.d(LOG_TAG, "onReceive: task = " + task + ", status = " + status);
+
+    if (task == 999) {
+        Log.d(LOG_TAG, "BroadcastReceiver get signal to stop");
+
+        System.exit(0);
     }
+
+
+
+            }
+
+    };
 
     @Override
     protected void onResume() {
@@ -126,6 +161,13 @@ public void onClickStart(View v) {
         super.onPause();
         //motionDetector.onPause();
         Log.d("MyTag", "MainActivity onPause");
+        String[] cmd = new String[] { "logcat", "-f", "/storage/extSdCard/log/MyTag", "-v", "time", "ActivityManager:W", "myapp:D" };
+        try {
+        Runtime.getRuntime().exec(cmd);
+        }
+        catch (IOException e) {
+        Log.d("MyTag",e.toString());
+        }
     }
 
     public void onClickPause(View v) {
