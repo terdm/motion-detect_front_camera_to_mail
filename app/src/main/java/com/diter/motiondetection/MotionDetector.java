@@ -24,6 +24,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,6 +35,28 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class MotionDetector {
     Camera.Size Gsize;
+    static Camera c = null;
+    static Camera mCamera = null;
+
+    public static void copy(File src, File dst) throws IOException {
+        InputStream in = new FileInputStream(src);
+        try {
+            OutputStream out = new FileOutputStream(dst);
+            try {
+                // Transfer bytes from in to out
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } finally {
+                out.close();
+            }
+        } finally {
+            in.close();
+        }
+    }
+
     class MotionDetectorThread extends Thread {
         private AtomicBoolean isRunning = new AtomicBoolean(true);
 
@@ -184,9 +209,10 @@ public class MotionDetector {
     private int minLuma = 1000;
     private MotionDetectorThread worker;
 
-    private Camera mCamera;
+
     private boolean inPreview;
-    private SurfaceHolder previewHolder;
+    private SurfaceHolder previewHolder; // ter 2017 11 29
+    //static SurfaceHolder previewHolder;
     private Context mContext;
     private SurfaceView mSurface;
     private String pwd;
@@ -350,9 +376,6 @@ public class MotionDetector {
 
         Log.d("MyTag", "MotionDetector.onResume");
 
-
-
-
         if ((mCamera == null) &&  !(previewHolder == null)) {
             Log.d("MyTag","MotionDetector.onResume mCamera is null but previewHolder not null");
         }
@@ -374,7 +397,10 @@ public class MotionDetector {
 
             // configure preview
             //Log.d("MyTag","MotionDetector.onResume before mSurface.getHolder");
-            previewHolder = mSurface.getHolder();
+
+            previewHolder = mSurface.getHolder(); //TER 2017 11 29
+            //previewHolder = SurfaceHolder.getSurface();
+
             //Log.d("MyTag","MotionDetector.onResume before addCallback");
             /////////////////////////////////////////////////////////////////////////
 
@@ -404,19 +430,22 @@ public class MotionDetector {
 
     private Camera getCameraInstance() {
         Log.d("MyTag","getCameraInstance starts");
-        Camera c = null;
+        //Camera c = null;
         try {
+            Log.d("MyTag"," c try begin before getNumberOfCameras ");
             if (Camera.getNumberOfCameras() >= 2) {
                 //if you want to open front facing camera use this line
+                Log.d("MyTag"," c 1 before open ");
                 c = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
                 //c = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
             } else {
+                Log.d("MyTag"," c 2 before open ");
                 c = Camera.open();
             }
         } catch (Exception e) {
             // Camera is not available (in use or does not exist)
             //txtStatus.setText("Kamera nicht zur Benutzung freigegeben");
-            Log.d("MyTag","getCameraInstance exception " + e.toString());
+            Log.d("MyTag","getCameraInstance c exception " + e.toString());
         }
         return c; // returns null if camera is unavailable
     }
@@ -508,10 +537,20 @@ public class MotionDetector {
 */
 
             File photo=new File(Environment.getExternalStorageDirectory(), "photo.jpg");
+            Date currentTime = Calendar.getInstance().getTime();
+            File photo2=new File("/storage/extSdCard/log", "photo " + currentTime.toString().replace(" ","").replace(":","").replace("+","") + ".jpg");
             showMessage("Path " + Environment.getExternalStorageDirectory().toString());
 
             if (photo.exists()) {
+                try
+                {
+                    copy(photo,photo2);
+                }
+                catch (IOException e) {
+                    Log.d("MyTag",e.toString());
+                }
                 photo.delete();
+
             }
 
             try {
